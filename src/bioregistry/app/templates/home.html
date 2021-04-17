@@ -2,14 +2,49 @@
 
 {% block title %}Bioregistry{% endblock %}
 
+{% block styles %}
+    {{ super() }}
+    <style>
+        a.active > .dropdown-item-label {
+            color: white;
+        }
+
+        a.active > .dropdown-item-link {
+            color: white
+        }
+    </style>
+{% endblock %}
+
 {% block scripts %}
     {{ super() }}
     <script>
-    $(".basicAutoComplete").autoComplete({
-        resolverSettings: {
-            url: "{{ url_for('api.search') }}"
-        }
-    });
+        $(".basicAutoComplete").autoComplete({
+            events: {
+                search: function (qry, callback, el) {
+                    $.ajax(
+                        "{{ url_for('api.autocomplete') }}",
+                        {
+                            data: {'q': qry}
+                        }
+                    ).done(function (res) {
+                        if (res.results !== undefined) {
+                            callback(res.results)
+                        } else {
+                            if (!($("#myDiv").length)) {
+                                $(".bootstrap-autocomplete").prepend('<div id="myDiv" style="padding-left: 20px; padding-top:10px; padding-bottom:20px"></div>');
+                            }
+                            if (res.reason == "passed validation") {
+                                $("#myDiv").html('<span><i class="far fa-check-circle"></i> Passed Validation</span>');
+                            } else if (res.reason == "failed validation") {
+                                $("#myDiv").html('<span><i class="far fa-times-circle"></i> Failed Validation against <code>' + res.pattern + '</code></span>');
+                            } else {
+                                console.log(res.reason);
+                            }
+                        }
+                    });
+                }
+            }
+        });
     </script>
 {% endblock %}
 
@@ -102,7 +137,6 @@
             #}
         </div>
     </div>
-    {#
         <div class="card-body">
             <h5 class="card-title">Prefix Search</h5>
             <div class="input-group mb-3">
@@ -117,6 +151,5 @@
                 </div>
             </div>
         </div>
-         #}
 {% endblock %}
 

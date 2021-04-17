@@ -66,10 +66,28 @@ def _normalize_prefix_or_404(prefix: str, endpoint: Optional[str] = None):
 def _search(q: str) -> List[str]:
     q_norm = q.lower()
     return [
-        prefix
+        _prepare_entry(prefix, q_norm)
         for prefix in bioregistry.read_registry()
         if q_norm in prefix
     ]
+
+
+def _prepare_entry(prefix: str, q: str):
+    start_index= prefix.index(q)
+    v = (
+        prefix[:start_index]
+        + '<b>' + prefix[start_index:start_index + len(q)] + '</b>'
+        + prefix[start_index + len(q):]
+    )
+    return {
+        "text": prefix,
+        "html": f'''
+            <span class="badge badge-secondary">{v}</span> 
+            <span class="dropdown-item-label">{bioregistry.get_name(prefix)}</span>
+            <a class="dropdown-item-link" href="{BIOREGISTRY_REMOTE_URL.rstrip('/')}/{prefix}"><i class="fas fa-external-link-alt"></i></a>
+            ''',
+    }
+
 
 
 def _autocomplete(q: str) -> Mapping[str, Any]:
